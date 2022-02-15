@@ -16,7 +16,7 @@ var defaultFiber = fiber.Config{
 }
 
 func DefaultFiber() *fiber.App {
-	app := fiber.New()
+	app := fiber.New(defaultFiber)
 
 	middleware.DefaultWarp(app)
 

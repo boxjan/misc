@@ -4,26 +4,86 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
+	"github.com/boxjan/misc/commom/cmd"
 	. "github.com/boxjan/misc/commom/fiber"
 	"github.com/digitorus/timestamp"
 	"github.com/gofiber/fiber/v2"
+	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v2"
+	"io/ioutil"
 	"k8s.io/klog/v2"
 	"net/http"
+	"os"
+	"runtime/debug"
 	"strconv"
 	"time"
 )
 
 var utcTz = time.UTC
 
+var (
+	rootCmd = cmd.QuickCobraRun("timer", run)
+
+	configPath = &cmd.ConfigPath
+	newConfig  = &cmd.NewConfig
+
+	conf = Config{}
+)
+
+func init() {
+	initCmd()
+}
+
+func initCmd() {
+}
+
 func main() {
+	if e := recover(); e != nil {
+		trace := debug.Stack()
+		klog.Errorf("catch panic: %v\nstack: %s", e, trace)
+		return
+	}
+
+	rootCmd.PreRunE = preRunE
+
+	if err := rootCmd.Execute(); err != nil {
+		klog.Error(err)
+	}
+}
+
+func preRunE(cmd *cobra.Command, args []string) error {
+	if *configPath == "" {
+		return fmt.Errorf("empty config path")
+	}
+
+	if *newConfig {
+		if d, err := yaml.Marshal(defaultConfig); err != nil {
+			return fmt.Errorf("marshal new config by yaml failed: %v", err)
+		} else if err = ioutil.WriteFile(*configPath, d, 0644); err != nil {
+			return fmt.Errorf("write new config failed: %v", err)
+		}
+		os.Exit(0)
+	}
+
+	if d, err := ioutil.ReadFile(*configPath); err != nil {
+		return fmt.Errorf("read config failed: %v", err)
+	} else if err := yaml.Unmarshal(d, &conf); err != nil {
+		return fmt.Errorf("unmarshal config by yaml failed: %v", err)
+	}
+
+	return nil
+}
+
+func run(cmd *cobra.Command, args []string) {
 	app := DefaultFiber()
 
-	app.Get("/api/v1/time", TimeHandle)
-	app.Get("/api/v1/timestamp", TimestampHandle)
-	app.Get("/api/v1/tsp", TspHandle)
+	apiV1 := app.Group("/api/v1").Name("api-v1/")
 
-	klog.Fatal(app.Listen("[::]:8000"))
+	apiV1.Get("time", TimeHandle)
+	apiV1.Get("timestamp", TimestampHandle)
+	apiV1.Get("tsp", TspHandle)
+
+	klog.Fatal(app.Listen(conf.Addr))
 }
 
 type Ans struct {
@@ -57,7 +117,6 @@ func NowTimeInTz(ctx *fiber.Ctx) Ans {
 	}
 
 	t := Ans{t: time.Now().In(tzInfo)}
-	t.Fill()
 	return t
 }
 
@@ -74,27 +133,30 @@ func TimeHandle(ctx *fiber.Ctx) error {
 
 	switch format {
 	case "json":
+		now.Fill()
 		if data, err = json.Marshal(now); err == nil {
 			ctx.Set(fiber.HeaderContentType, fiber.MIMEApplicationJSON)
 			return ctx.Send(data)
 		}
-	case "yaml":
-		if data, err = yaml.Marshal(now); err == nil {
-			ctx.Set(fiber.HeaderContentType, fiber.MIMETextPlain)
-			return ctx.Send(data)
-		}
 	case "xml":
+		now.Fill()
 		ctx.Set(fiber.HeaderContentType, fiber.MIMETextXML)
 		if data, err = xml.Marshal(now); err == nil {
 			return ctx.Send(data)
+		}
+	default:
+		ctx.Set(fiber.HeaderContentType, fiber.MIMETextPlain)
+		for k, f := range conf.ExtraFormat {
+			if format == k {
+				return ctx.SendString(now.t.Format(f))
+			}
 		}
 	}
 
 	if err != nil {
 		klog.Warningf("%s marshal failed with err: %s", format, err)
 	}
-	ctx.Set(fiber.HeaderContentType, "text/plain")
-	return ctx.SendString(now.RFC3339Nano)
+	return ctx.SendString(now.t.Format(time.RFC3339Nano))
 }
 
 func TimestampHandle(ctx *fiber.Ctx) error {
