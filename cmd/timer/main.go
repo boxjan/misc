@@ -16,6 +16,7 @@ import (
 	"os"
 	"runtime/debug"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -52,10 +53,6 @@ func main() {
 }
 
 func preRunE(cmd *cobra.Command, args []string) error {
-	if *configPath == "" {
-		return fmt.Errorf("empty config path")
-	}
-
 	if *newConfig {
 		if d, err := yaml.Marshal(defaultConfig); err != nil {
 			return fmt.Errorf("marshal new config by yaml failed: %v", err)
@@ -63,6 +60,11 @@ func preRunE(cmd *cobra.Command, args []string) error {
 			return fmt.Errorf("write new config failed: %v", err)
 		}
 		os.Exit(0)
+	}
+
+	if *configPath == "" {
+		conf = defaultConfig
+		return nil
 	}
 
 	if d, err := ioutil.ReadFile(*configPath); err != nil {
@@ -147,7 +149,7 @@ func TimeHandle(ctx *fiber.Ctx) error {
 	default:
 		ctx.Set(fiber.HeaderContentType, fiber.MIMETextPlain)
 		for k, f := range conf.ExtraFormat {
-			if format == k {
+			if strings.ToUpper(format) == strings.ToUpper(k) {
 				return ctx.SendString(now.t.Format(f))
 			}
 		}

@@ -6,7 +6,7 @@ type Config struct {
 }
 
 var defaultConfig = Config{
-	Addr: "8000",
+	Addr: "[::]:8000",
 	ExtraFormat: map[string]string{
 		"RFC3339": "2006-01-02T15:04:05Z07:00",
 	},

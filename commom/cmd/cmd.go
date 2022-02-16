@@ -21,7 +21,7 @@ func QuickCobraRun(name string, run func(cmd *cobra.Command, args []string)) *co
 	klog.InitFlags(klogFlags)
 
 	cmd := &cobra.Command{
-		Use:     name + " -c config-path",
+		Use:     name,
 		Version: fmt.Sprintf("%s@[%s]%s", version, runtime.Version(), buildTime),
 		Run:     run,
 	}
@@ -29,7 +29,7 @@ func QuickCobraRun(name string, run func(cmd *cobra.Command, args []string)) *co
 	flags := cmd.PersistentFlags()
 
 	flags.AddGoFlagSet(klogFlags)
-	flags.StringVarP(&ConfigPath, "config", "c", "conf.yaml", "config path")
+	flags.StringVarP(&ConfigPath, "config", "c", "", "config path")
 	flags.BoolVarP(&NewConfig, "new-config", "", false, "generate empty config in given path")
 
 	return cmd
