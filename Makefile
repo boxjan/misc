@@ -41,9 +41,15 @@ $(CMDS:%=container-%): container-%: build-%
 		docker build -t $(REGISTRY)-$*:$(REV)-$$arch -t $(REGISTRY)-$*:latest-$$arch \
 		--build-arg os=$$os --build-arg arch=$$arch --platform $$os/$$arch \
 		-f $(shell if [ -e ./cmd/$*/Dockerfile ]; then echo ./cmd/$*/Dockerfile; else echo Dockerfile; fi) . ; \
+		docker push $(REGISTRY)-$*:$(REV)-$$arch; \
+		docker push $(REGISTRY)-$*:latest-$$arch; \
 	done; \
-	docker manifest create $(REGISTRY)-$*:$(REV) $(shell echo '$(BUILD_PLATFORMS)' | tr '/' ' ' | tr ',' '\n' | while read -r os arch suffix; do echo $(REGISTRY)-$*:$(REV)-"$$arch"; done); \
-    docker manifest create $(REGISTRY)-$*:latest $(shell echo '$(BUILD_PLATFORMS)' | tr '/' ' ' | tr ',' '\n' | while read -r os arch suffix; do echo $(REGISTRY)-$*:latest-"$$arch"; done); \
+	docker manifest create $(REGISTRY)-$*:latest $(shell echo '$(BUILD_PLATFORMS)' | tr '/' ' ' | tr ',' '\n' | while read -r os arch suffix; do echo $(REGISTRY)-$*:latest-"$$arch"; done); \
+    docker manifest create $(REGISTRY)-$*:$(REV) $(shell echo '$(BUILD_PLATFORMS)' | tr '/' ' ' | tr ',' '\n' | while read -r os arch suffix; do echo $(REGISTRY)-$*:$(REV)-"$$arch"; done); \
+	echo '$(BUILD_PLATFORMS)' | tr '/' ' ' | tr ',' '\n' | while read -r os arch suffix; do \
+		docker manifest annotate $(REGISTRY)-$*:$(REV) $(REGISTRY)-$*:$(REV)-$$arch --os $$os --arch $$arch; \
+    	docker manifest annotate $(REGISTRY)-$*:latest $(REGISTRY)-$*:latest-$$arch --os $$os --arch $$arch; \
+	done; \
 	docker manifest push $(REGISTRY)-$*:latest;\
 	docker manifest push $(REGISTRY)-$*:$(REV)
 
