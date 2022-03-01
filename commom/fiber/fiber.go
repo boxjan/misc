@@ -3,6 +3,7 @@ package fiber
 import (
 	"github.com/boxjan/misc/commom/fiber/middleware"
 	"github.com/gofiber/fiber/v2"
+	"os"
 )
 
 var defaultFiber = fiber.Config{
@@ -16,6 +17,7 @@ var defaultFiber = fiber.Config{
 }
 
 func DefaultFiber() *fiber.App {
+	_ = os.Setenv("NO_COLOR", "1")
 	app := fiber.New(defaultFiber)
 
 	middleware.DefaultWarp(app)

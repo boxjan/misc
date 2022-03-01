@@ -133,6 +133,11 @@ func TimeHandle(ctx *fiber.Ctx) error {
 		}
 	default:
 		ctx.Set(fiber.HeaderContentType, fiber.MIMETextPlain)
+		for k, f := range conf.ExtraFormat {
+			if strings.ToUpper(format) == strings.ToUpper(k) {
+				return ctx.SendString(now.t.Format(f))
+			}
+		}
 
 		for k, f := range innerFormat {
 			if strings.ToUpper(format) == strings.ToUpper(k) {
@@ -140,11 +145,6 @@ func TimeHandle(ctx *fiber.Ctx) error {
 			}
 		}
 
-		for k, f := range conf.ExtraFormat {
-			if strings.ToUpper(format) == strings.ToUpper(k) {
-				return ctx.SendString(now.t.Format(f))
-			}
-		}
 	}
 
 	if err != nil {
