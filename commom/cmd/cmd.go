@@ -13,7 +13,6 @@ var (
 	version   = "dev"
 
 	ConfigPath string
-	NewConfig  bool
 )
 
 func QuickCobraRun(name string, run func(cmd *cobra.Command, args []string)) *cobra.Command {
@@ -30,7 +29,6 @@ func QuickCobraRun(name string, run func(cmd *cobra.Command, args []string)) *co
 
 	flags.AddGoFlagSet(klogFlags)
 	flags.StringVarP(&ConfigPath, "config", "c", "", "config path")
-	flags.BoolVarP(&NewConfig, "new-config", "", false, "generate empty config in given path")
 
 	return cmd
 }

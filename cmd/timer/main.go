@@ -6,14 +6,12 @@ import (
 	"fmt"
 	"github.com/boxjan/misc/commom/cmd"
 	. "github.com/boxjan/misc/commom/fiber"
-	"github.com/digitorus/timestamp"
 	"github.com/gofiber/fiber/v2"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"k8s.io/klog/v2"
 	"net/http"
-	"os"
 	"runtime/debug"
 	"strconv"
 	"strings"
@@ -26,7 +24,6 @@ var (
 	rootCmd = cmd.QuickCobraRun("timer", run)
 
 	configPath = &cmd.ConfigPath
-	newConfig  = &cmd.NewConfig
 
 	conf = Config{}
 )
@@ -53,26 +50,15 @@ func main() {
 }
 
 func preRunE(cmd *cobra.Command, args []string) error {
-	if *newConfig {
-		if d, err := yaml.Marshal(defaultConfig); err != nil {
-			return fmt.Errorf("marshal new config by yaml failed: %v", err)
-		} else if err = ioutil.WriteFile(*configPath, d, 0644); err != nil {
-			return fmt.Errorf("write new config failed: %v", err)
-		}
-		os.Exit(0)
-	}
-
-	if *configPath == "" {
+	if d, err := ioutil.ReadFile(*configPath); err != nil {
+		klog.Warningf("can not load conf, will use default config")
+		conf = defaultConfig
+		return nil
+	} else if err := yaml.Unmarshal(d, &conf); err != nil {
+		klog.Warningf("can not load conf, will use default config")
 		conf = defaultConfig
 		return nil
 	}
-
-	if d, err := ioutil.ReadFile(*configPath); err != nil {
-		return fmt.Errorf("read config failed: %v", err)
-	} else if err := yaml.Unmarshal(d, &conf); err != nil {
-		return fmt.Errorf("unmarshal config by yaml failed: %v", err)
-	}
-
 	return nil
 }
 
@@ -81,9 +67,12 @@ func run(cmd *cobra.Command, args []string) {
 
 	apiV1 := app.Group("/api/v1").Name("api-v1/")
 
-	apiV1.Get("time", TimeHandle)
-	apiV1.Get("timestamp", TimestampHandle)
-	apiV1.Get("tsp", TspHandle)
+	/*
+		/api/v1/time
+		/api/v1/timestamp
+	*/
+	apiV1.Get("time", TimeHandle).Name("time")
+	apiV1.Get("timestamp", TimestampHandle).Name("timestamp")
 
 	klog.Fatal(app.Listen(conf.Addr))
 }
@@ -122,10 +111,6 @@ func NowTimeInTz(ctx *fiber.Ctx) Ans {
 	return t
 }
 
-func TspHandle(ctx *fiber.Ctx) error {
-	return timestamp.ParseError("")
-}
-
 func TimeHandle(ctx *fiber.Ctx) error {
 	format := ctx.Query("format", "wild")
 	now := NowTimeInTz(ctx)
@@ -148,6 +133,13 @@ func TimeHandle(ctx *fiber.Ctx) error {
 		}
 	default:
 		ctx.Set(fiber.HeaderContentType, fiber.MIMETextPlain)
+
+		for k, f := range innerFormat {
+			if strings.ToUpper(format) == strings.ToUpper(k) {
+				return ctx.SendString(now.t.Format(f))
+			}
+		}
+
 		for k, f := range conf.ExtraFormat {
 			if strings.ToUpper(format) == strings.ToUpper(k) {
 				return ctx.SendString(now.t.Format(f))
