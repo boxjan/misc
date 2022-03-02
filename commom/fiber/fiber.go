@@ -22,5 +22,9 @@ func DefaultFiber() *fiber.App {
 
 	middleware.DefaultWarp(app)
 
+	app.Get("/healthz", func(ctx *fiber.Ctx) error {
+		return ctx.SendString("OK")
+	}).Name("healthy-check")
+
 	return app
 }
