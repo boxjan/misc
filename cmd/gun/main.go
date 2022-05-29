@@ -134,8 +134,8 @@ func gameHandle(ctx *fiber.Ctx) error {
 
 	hold := make(chan int, 1)
 	shot.Lock()
-	if ch, ok := shot.user[partner]; !ok {
-		klog.Warningf("game: %s partner: %s have join the game", game, ch)
+	if ch, ok := shot.user[partner]; ok {
+		klog.Warningf("game: %s partner: %s have join the game", game, partner)
 		ch <- -1
 	}
 	shot.user[partner] = hold
