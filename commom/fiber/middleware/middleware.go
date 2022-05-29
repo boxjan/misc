@@ -7,7 +7,6 @@ import (
 )
 
 func DefaultWarp(app *fiber.App) {
-	app.Use(pprof.New())
-
 	app.Use(logger.Logger())
+	app.Use(pprof.New())
 }

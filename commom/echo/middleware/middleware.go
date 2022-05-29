@@ -7,6 +7,6 @@ import (
 )
 
 func DefaultWarp(app *echo.Echo) {
-	app.Use(pprof.New())
 	app.Use(logger.Logger())
+	app.Use(pprof.New())
 }

@@ -14,7 +14,7 @@ func New() echo.MiddlewareFunc {
 			path := ctx.Path()
 			// We are only interested in /debug/pprof routes
 			if len(path) < 12 || !strings.HasPrefix(path, "/debug/pprof") {
-				return nil
+				return next(ctx)
 			}
 			switch path {
 			case "/debug/pprof/":
