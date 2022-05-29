@@ -22,11 +22,9 @@ import (
 var utcTz = time.UTC
 
 var (
-	rootCmd = cmd.QuickCobraRun("timer", run)
-
+	rootCmd    = cmd.QuickCobraRun("timer", run)
 	configPath = &cmd.ConfigPath
-
-	conf = Config{}
+	conf       = Config{}
 )
 
 func init() {
