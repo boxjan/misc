@@ -44,7 +44,7 @@ func (g *Gunshots) CheckRegisteredCount() {
 			return
 		}
 		g.Lock()
-		if len(g.user) == g.expectNum+1 {
+		if len(g.user) >= g.expectNum {
 			g.started = true
 			g.startedAt = time.Now()
 			g.fire <- struct{}{}
