@@ -64,7 +64,7 @@ func run(cmd *cobra.Command, args []string) {
 
 	apiV1 := app.Group("/api/v1/")
 
-	apiV1.POST("gun/:game/:num", newGameHandle).Name = "api-v1/new-game"
+	apiV1.POST("gun/:game/:partner", newGameHandle).Name = "api-v1/new-game"
 	apiV1.GET("gun/:game/:partner", gameHandle).Name = "api-v1/join-game"
 
 	klog.Fatal(app.Start(conf.Addr))
@@ -78,7 +78,7 @@ func newGameHandle(ctx echo.Context) error {
 
 	sth, ok := allGames.Load(g)
 	if !ok {
-		num, e := strconv.Atoi(ctx.Param("num"))
+		num, e := strconv.Atoi(ctx.Param("partner"))
 		if e != nil || num <= 0 {
 			klog.Warningf("someone ask a new game with %+v participant", ctx.QueryParam("num"))
 			return ctx.String(http.StatusTeapot, "plz tell me the new game expect number of participants")
