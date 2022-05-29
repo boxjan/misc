@@ -62,9 +62,9 @@ func preRunE(cmd *cobra.Command, args []string) error {
 func run(cmd *cobra.Command, args []string) {
 	app := DefaultEcho()
 
-	apiV1 := app.Group("/api/v1")
+	apiV1 := app.Group("/api/v1/")
 
-	apiV1.POST("gun/:game", newGameHandle).Name = "api-v1/new-game"
+	apiV1.POST("gun/:game/:num", newGameHandle).Name = "api-v1/new-game"
 	apiV1.GET("gun/:game/:partner", gameHandle).Name = "api-v1/join-game"
 
 	klog.Fatal(app.Start(conf.Addr))
@@ -78,7 +78,7 @@ func newGameHandle(ctx echo.Context) error {
 
 	sth, ok := allGames.Load(g)
 	if !ok {
-		num, e := strconv.Atoi(ctx.QueryParam("num"))
+		num, e := strconv.Atoi(ctx.Param("num"))
 		if e != nil || num <= 0 {
 			klog.Warningf("someone ask a new game with %+v participant", ctx.QueryParam("num"))
 			return ctx.String(http.StatusTeapot, "plz tell me the new game expect number of participants")
@@ -121,6 +121,10 @@ func gameHandle(ctx echo.Context) error {
 		return ctx.String(http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
 	}
 
+	if shot.started {
+		return ctx.String(http.StatusGone, "the game is start, you are too late")
+	}
+
 	hold := make(chan int, 1)
 	shot.Lock()
 	if ch, ok := shot.user[partner]; ok {
@@ -131,7 +135,7 @@ func gameHandle(ctx echo.Context) error {
 	shot.Unlock()
 
 	rsp := ctx.Response()
-	keepAliveTicker := time.NewTicker(10 * time.Second).C
+	keepAliveTicker := time.NewTicker(5 * time.Second).C
 	for {
 		select {
 		case <-keepAliveTicker:
