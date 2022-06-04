@@ -1,0 +1,5 @@
+package netif
+
+func NewWgServer() {
+
+}
