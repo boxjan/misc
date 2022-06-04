@@ -84,20 +84,18 @@ var (
 	UpdateDefaultUpdatedAt func() time.Time
 	// DefaultDestroyedAt holds the default value on creation for the "destroyed_at" field.
 	DefaultDestroyedAt func() time.Time
-	// UpdateDefaultDestroyedAt holds the default value on update for the "destroyed_at" field.
-	UpdateDefaultDestroyedAt func() time.Time
 	// DefaultExpired holds the default value on creation for the "expired" field.
 	DefaultExpired bool
 	// DefaultIdentify holds the default value on creation for the "identify" field.
 	DefaultIdentify string
-	// IdentifyValidator is a validator for the "identify" field. It is called by the builders before save.
-	IdentifyValidator func(string) error
 	// ServerPrivateKeyValidator is a validator for the "server_private_key" field. It is called by the builders before save.
 	ServerPrivateKeyValidator func(string) error
 	// ClientPrivateKeyValidator is a validator for the "client_private_key" field. It is called by the builders before save.
 	ClientPrivateKeyValidator func(string) error
 	// NetifNameValidator is a validator for the "netif_name" field. It is called by the builders before save.
 	NetifNameValidator func(string) error
+	// DefaultPeerAddr holds the default value on creation for the "peer_addr" field.
+	DefaultPeerAddr string
 	// ListenAddrValidator is a validator for the "listen_addr" field. It is called by the builders before save.
 	ListenAddrValidator func(string) error
 	// AllocCidrValidator is a validator for the "alloc_cidr" field. It is called by the builders before save.
@@ -106,4 +104,8 @@ var (
 	ServerAddressValidator func(string) error
 	// ClientAddressValidator is a validator for the "client_address" field. It is called by the builders before save.
 	ClientAddressValidator func(string) error
+	// DefaultReceiveBytes holds the default value on creation for the "receive_bytes" field.
+	DefaultReceiveBytes uint64
+	// DefaultTransmitBytes holds the default value on creation for the "transmit_bytes" field.
+	DefaultTransmitBytes uint64
 )

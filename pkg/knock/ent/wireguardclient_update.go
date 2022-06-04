@@ -54,6 +54,14 @@ func (wcu *WireguardClientUpdate) SetDestroyedAt(t time.Time) *WireguardClientUp
 	return wcu
 }
 
+// SetNillableDestroyedAt sets the "destroyed_at" field if the given value is not nil.
+func (wcu *WireguardClientUpdate) SetNillableDestroyedAt(t *time.Time) *WireguardClientUpdate {
+	if t != nil {
+		wcu.SetDestroyedAt(*t)
+	}
+	return wcu
+}
+
 // SetExpired sets the "expired" field.
 func (wcu *WireguardClientUpdate) SetExpired(b bool) *WireguardClientUpdate {
 	wcu.mutation.SetExpired(b)
@@ -106,6 +114,14 @@ func (wcu *WireguardClientUpdate) SetPeerAddr(s string) *WireguardClientUpdate {
 	return wcu
 }
 
+// SetNillablePeerAddr sets the "peer_addr" field if the given value is not nil.
+func (wcu *WireguardClientUpdate) SetNillablePeerAddr(s *string) *WireguardClientUpdate {
+	if s != nil {
+		wcu.SetPeerAddr(*s)
+	}
+	return wcu
+}
+
 // SetListenAddr sets the "listen_addr" field.
 func (wcu *WireguardClientUpdate) SetListenAddr(s string) *WireguardClientUpdate {
 	wcu.mutation.SetListenAddr(s)
@@ -137,6 +153,14 @@ func (wcu *WireguardClientUpdate) SetReceiveBytes(u uint64) *WireguardClientUpda
 	return wcu
 }
 
+// SetNillableReceiveBytes sets the "receive_bytes" field if the given value is not nil.
+func (wcu *WireguardClientUpdate) SetNillableReceiveBytes(u *uint64) *WireguardClientUpdate {
+	if u != nil {
+		wcu.SetReceiveBytes(*u)
+	}
+	return wcu
+}
+
 // AddReceiveBytes adds u to the "receive_bytes" field.
 func (wcu *WireguardClientUpdate) AddReceiveBytes(u int64) *WireguardClientUpdate {
 	wcu.mutation.AddReceiveBytes(u)
@@ -147,6 +171,14 @@ func (wcu *WireguardClientUpdate) AddReceiveBytes(u int64) *WireguardClientUpdat
 func (wcu *WireguardClientUpdate) SetTransmitBytes(u uint64) *WireguardClientUpdate {
 	wcu.mutation.ResetTransmitBytes()
 	wcu.mutation.SetTransmitBytes(u)
+	return wcu
+}
+
+// SetNillableTransmitBytes sets the "transmit_bytes" field if the given value is not nil.
+func (wcu *WireguardClientUpdate) SetNillableTransmitBytes(u *uint64) *WireguardClientUpdate {
+	if u != nil {
+		wcu.SetTransmitBytes(*u)
+	}
 	return wcu
 }
 
@@ -228,19 +260,10 @@ func (wcu *WireguardClientUpdate) defaults() {
 		v := wireguardclient.UpdateDefaultUpdatedAt()
 		wcu.mutation.SetUpdatedAt(v)
 	}
-	if _, ok := wcu.mutation.DestroyedAt(); !ok {
-		v := wireguardclient.UpdateDefaultDestroyedAt()
-		wcu.mutation.SetDestroyedAt(v)
-	}
 }
 
 // check runs all checks and user-defined validators on the builder.
 func (wcu *WireguardClientUpdate) check() error {
-	if v, ok := wcu.mutation.Identify(); ok {
-		if err := wireguardclient.IdentifyValidator(v); err != nil {
-			return &ValidationError{Name: "identify", err: fmt.Errorf(`ent: validator failed for field "WireguardClient.identify": %w`, err)}
-		}
-	}
 	if v, ok := wcu.mutation.ServerPrivateKey(); ok {
 		if err := wireguardclient.ServerPrivateKeyValidator(v); err != nil {
 			return &ValidationError{Name: "server_private_key", err: fmt.Errorf(`ent: validator failed for field "WireguardClient.server_private_key": %w`, err)}
@@ -461,6 +484,14 @@ func (wcuo *WireguardClientUpdateOne) SetDestroyedAt(t time.Time) *WireguardClie
 	return wcuo
 }
 
+// SetNillableDestroyedAt sets the "destroyed_at" field if the given value is not nil.
+func (wcuo *WireguardClientUpdateOne) SetNillableDestroyedAt(t *time.Time) *WireguardClientUpdateOne {
+	if t != nil {
+		wcuo.SetDestroyedAt(*t)
+	}
+	return wcuo
+}
+
 // SetExpired sets the "expired" field.
 func (wcuo *WireguardClientUpdateOne) SetExpired(b bool) *WireguardClientUpdateOne {
 	wcuo.mutation.SetExpired(b)
@@ -513,6 +544,14 @@ func (wcuo *WireguardClientUpdateOne) SetPeerAddr(s string) *WireguardClientUpda
 	return wcuo
 }
 
+// SetNillablePeerAddr sets the "peer_addr" field if the given value is not nil.
+func (wcuo *WireguardClientUpdateOne) SetNillablePeerAddr(s *string) *WireguardClientUpdateOne {
+	if s != nil {
+		wcuo.SetPeerAddr(*s)
+	}
+	return wcuo
+}
+
 // SetListenAddr sets the "listen_addr" field.
 func (wcuo *WireguardClientUpdateOne) SetListenAddr(s string) *WireguardClientUpdateOne {
 	wcuo.mutation.SetListenAddr(s)
@@ -544,6 +583,14 @@ func (wcuo *WireguardClientUpdateOne) SetReceiveBytes(u uint64) *WireguardClient
 	return wcuo
 }
 
+// SetNillableReceiveBytes sets the "receive_bytes" field if the given value is not nil.
+func (wcuo *WireguardClientUpdateOne) SetNillableReceiveBytes(u *uint64) *WireguardClientUpdateOne {
+	if u != nil {
+		wcuo.SetReceiveBytes(*u)
+	}
+	return wcuo
+}
+
 // AddReceiveBytes adds u to the "receive_bytes" field.
 func (wcuo *WireguardClientUpdateOne) AddReceiveBytes(u int64) *WireguardClientUpdateOne {
 	wcuo.mutation.AddReceiveBytes(u)
@@ -554,6 +601,14 @@ func (wcuo *WireguardClientUpdateOne) AddReceiveBytes(u int64) *WireguardClientU
 func (wcuo *WireguardClientUpdateOne) SetTransmitBytes(u uint64) *WireguardClientUpdateOne {
 	wcuo.mutation.ResetTransmitBytes()
 	wcuo.mutation.SetTransmitBytes(u)
+	return wcuo
+}
+
+// SetNillableTransmitBytes sets the "transmit_bytes" field if the given value is not nil.
+func (wcuo *WireguardClientUpdateOne) SetNillableTransmitBytes(u *uint64) *WireguardClientUpdateOne {
+	if u != nil {
+		wcuo.SetTransmitBytes(*u)
+	}
 	return wcuo
 }
 
@@ -642,19 +697,10 @@ func (wcuo *WireguardClientUpdateOne) defaults() {
 		v := wireguardclient.UpdateDefaultUpdatedAt()
 		wcuo.mutation.SetUpdatedAt(v)
 	}
-	if _, ok := wcuo.mutation.DestroyedAt(); !ok {
-		v := wireguardclient.UpdateDefaultDestroyedAt()
-		wcuo.mutation.SetDestroyedAt(v)
-	}
 }
 
 // check runs all checks and user-defined validators on the builder.
 func (wcuo *WireguardClientUpdateOne) check() error {
-	if v, ok := wcuo.mutation.Identify(); ok {
-		if err := wireguardclient.IdentifyValidator(v); err != nil {
-			return &ValidationError{Name: "identify", err: fmt.Errorf(`ent: validator failed for field "WireguardClient.identify": %w`, err)}
-		}
-	}
 	if v, ok := wcuo.mutation.ServerPrivateKey(); ok {
 		if err := wireguardclient.ServerPrivateKeyValidator(v); err != nil {
 			return &ValidationError{Name: "server_private_key", err: fmt.Errorf(`ent: validator failed for field "WireguardClient.server_private_key": %w`, err)}

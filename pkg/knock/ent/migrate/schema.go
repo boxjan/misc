@@ -19,13 +19,13 @@ var (
 		{Name: "server_private_key", Type: field.TypeString, Unique: true},
 		{Name: "client_private_key", Type: field.TypeString, Unique: true},
 		{Name: "netif_name", Type: field.TypeString, Unique: true, Size: 14},
-		{Name: "peer_addr", Type: field.TypeString},
+		{Name: "peer_addr", Type: field.TypeString, Default: ""},
 		{Name: "listen_addr", Type: field.TypeString},
 		{Name: "alloc_cidr", Type: field.TypeString},
 		{Name: "server_address", Type: field.TypeString},
 		{Name: "client_address", Type: field.TypeString},
-		{Name: "receive_bytes", Type: field.TypeUint64},
-		{Name: "transmit_bytes", Type: field.TypeUint64},
+		{Name: "receive_bytes", Type: field.TypeUint64, Default: 0},
+		{Name: "transmit_bytes", Type: field.TypeUint64, Default: 0},
 	}
 	// WireguardClientsTable holds the schema information for the "wireguard_clients" table.
 	WireguardClientsTable = &schema.Table{

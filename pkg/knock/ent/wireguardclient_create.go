@@ -114,6 +114,14 @@ func (wcc *WireguardClientCreate) SetPeerAddr(s string) *WireguardClientCreate {
 	return wcc
 }
 
+// SetNillablePeerAddr sets the "peer_addr" field if the given value is not nil.
+func (wcc *WireguardClientCreate) SetNillablePeerAddr(s *string) *WireguardClientCreate {
+	if s != nil {
+		wcc.SetPeerAddr(*s)
+	}
+	return wcc
+}
+
 // SetListenAddr sets the "listen_addr" field.
 func (wcc *WireguardClientCreate) SetListenAddr(s string) *WireguardClientCreate {
 	wcc.mutation.SetListenAddr(s)
@@ -144,9 +152,25 @@ func (wcc *WireguardClientCreate) SetReceiveBytes(u uint64) *WireguardClientCrea
 	return wcc
 }
 
+// SetNillableReceiveBytes sets the "receive_bytes" field if the given value is not nil.
+func (wcc *WireguardClientCreate) SetNillableReceiveBytes(u *uint64) *WireguardClientCreate {
+	if u != nil {
+		wcc.SetReceiveBytes(*u)
+	}
+	return wcc
+}
+
 // SetTransmitBytes sets the "transmit_bytes" field.
 func (wcc *WireguardClientCreate) SetTransmitBytes(u uint64) *WireguardClientCreate {
 	wcc.mutation.SetTransmitBytes(u)
+	return wcc
+}
+
+// SetNillableTransmitBytes sets the "transmit_bytes" field if the given value is not nil.
+func (wcc *WireguardClientCreate) SetNillableTransmitBytes(u *uint64) *WireguardClientCreate {
+	if u != nil {
+		wcc.SetTransmitBytes(*u)
+	}
 	return wcc
 }
 
@@ -241,6 +265,18 @@ func (wcc *WireguardClientCreate) defaults() {
 		v := wireguardclient.DefaultIdentify
 		wcc.mutation.SetIdentify(v)
 	}
+	if _, ok := wcc.mutation.PeerAddr(); !ok {
+		v := wireguardclient.DefaultPeerAddr
+		wcc.mutation.SetPeerAddr(v)
+	}
+	if _, ok := wcc.mutation.ReceiveBytes(); !ok {
+		v := wireguardclient.DefaultReceiveBytes
+		wcc.mutation.SetReceiveBytes(v)
+	}
+	if _, ok := wcc.mutation.TransmitBytes(); !ok {
+		v := wireguardclient.DefaultTransmitBytes
+		wcc.mutation.SetTransmitBytes(v)
+	}
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -259,11 +295,6 @@ func (wcc *WireguardClientCreate) check() error {
 	}
 	if _, ok := wcc.mutation.Identify(); !ok {
 		return &ValidationError{Name: "identify", err: errors.New(`ent: missing required field "WireguardClient.identify"`)}
-	}
-	if v, ok := wcc.mutation.Identify(); ok {
-		if err := wireguardclient.IdentifyValidator(v); err != nil {
-			return &ValidationError{Name: "identify", err: fmt.Errorf(`ent: validator failed for field "WireguardClient.identify": %w`, err)}
-		}
 	}
 	if _, ok := wcc.mutation.ServerPrivateKey(); !ok {
 		return &ValidationError{Name: "server_private_key", err: errors.New(`ent: missing required field "WireguardClient.server_private_key"`)}

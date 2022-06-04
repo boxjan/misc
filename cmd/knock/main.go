@@ -15,6 +15,7 @@ import (
 	"k8s.io/klog/v2"
 	"net"
 	"runtime/debug"
+	"strings"
 )
 
 var (
@@ -48,11 +49,9 @@ func preRunE(cmd *cobra.Command, args []string) error {
 	if d, err := ioutil.ReadFile(*configPath); err != nil {
 		klog.Warningf("can not load conf, will use default config")
 		conf = defaultConfig
-		return nil
 	} else if err := yaml.Unmarshal(d, &conf); err != nil {
 		klog.Warningf("can not load conf, will use default config")
 		conf = defaultConfig
-		return nil
 	}
 
 	// get connect ip
@@ -61,7 +60,7 @@ func preRunE(cmd *cobra.Command, args []string) error {
 		if pubIp == "" {
 			return fmt.Errorf("emm, need a ip write in client conf")
 		}
-		conf.Wireguard.LocalIp = pubIp
+		conf.Wireguard.LocalIp = strings.Trim(pubIp, "\n")
 	}
 
 	// client database

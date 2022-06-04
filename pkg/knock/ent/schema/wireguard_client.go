@@ -18,17 +18,17 @@ func (WireguardClient) Fields() []ent.Field {
 		field.Time("updated_at").Default(time.Now).UpdateDefault(time.Now),
 		field.Time("destroyed_at").Default(func() time.Time { return time.Unix(0, 0) }),
 		field.Bool("expired").Default(false),
-		field.String("identify").Default("").NotEmpty(),
+		field.String("identify").Default(""),
 		field.String("server_private_key").NotEmpty().Unique(),
 		field.String("client_private_key").NotEmpty().Unique(),
 		field.String("netif_name").NotEmpty().MaxLen(14).Unique(),
-		field.String("peer_addr"),
+		field.String("peer_addr").Default(""),
 		field.String("listen_addr").NotEmpty(),
 		field.String("alloc_cidr").NotEmpty(),
 		field.String("server_address").NotEmpty(),
 		field.String("client_address").NotEmpty(),
-		field.Uint64("receive_bytes"),
-		field.Uint64("transmit_bytes"),
+		field.Uint64("receive_bytes").Default(0),
+		field.Uint64("transmit_bytes").Default(0),
 	}
 }
 
