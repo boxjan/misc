@@ -10,19 +10,20 @@ type Config struct {
 }
 
 type Database struct {
-	Type string
-	Dsn  string
+	Type string `yaml:"type"`
+	Dsn  string `yaml:"dsn"`
 }
 
 type Wireguard struct {
-	AllocCidr  string
-	LocalIp    string
-	AllowedIps []string
-	allowedIps []net.IPNet
+	AllocCidr        string   `yaml:"alloc_cidr"`
+	ExcludeAllocCidr []string `yaml:"exclude_alloc_cidr"`
+	LocalIp          string   `yaml:"local_ip"`
+	AllowedIps       []string `yaml:"allowed_ips"`
+	allowedIps       []net.IPNet
 }
 
 type Http struct {
-	IdentityHeader string
+	IdentityHeader string `yaml:"identity_header"`
 }
 
 var defaultConfig = Config{
@@ -32,9 +33,10 @@ var defaultConfig = Config{
 		Dsn:  "file:ent?mode=memory&_fk=1",
 	},
 	Wireguard: Wireguard{
-		AllocCidr:  "10.100.255.128/25",
-		LocalIp:    "",
-		AllowedIps: []string{"10.100.0.0/16", "10.105.0.0/16"},
+		AllocCidr:        "10.100.0.0/24",
+		ExcludeAllocCidr: []string{"10.100.0.0/26"},
+		LocalIp:          "",
+		AllowedIps:       []string{"10.100.0.0/16", "10.105.0.0/16"},
 	},
 	Http: Http{
 		IdentityHeader: "",

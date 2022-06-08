@@ -87,6 +87,9 @@ func NewWireguard(identify string) (ClientConf *WgConfig, err error) {
 	ServerConf.Address = serverIp.String() + "/" + strings.Split(tunnelIps.String(), "/")[1]
 
 	clientIp := tunnelIps.IP
+
+	copy(clientIp, tunnelIps.IP)
+
 	if len(clientIp) == net.IPv4len {
 		clientIp[3] = serverIp[3] + 1
 	} else {

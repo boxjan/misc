@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/boxjan/misc/commom/address"
+	"github.com/boxjan/misc/commom/cidrset"
 	"github.com/boxjan/misc/commom/cmd"
 	. "github.com/boxjan/misc/commom/fiber"
 	"github.com/boxjan/misc/pkg/knock/ent"
@@ -19,16 +20,18 @@ import (
 )
 
 var (
-	rootCmd    = cmd.QuickCobraRun("knock", run)
-	configPath = &cmd.ConfigPath
-	conf       = Config{}
+	rootCmd        = cmd.QuickCobraRun("knock", run)
+	configPath     = &cmd.ConfigPath
+	generateConfig = &cmd.GenerateConfig
+	conf           = Config{}
 
 	dbCli   = &ent.Client{}
-	cidrSet *address.CidrSet
+	cidrSet *cidrset.CidrSet
 )
 
 func init() {
-
+	b, _ := yaml.Marshal(defaultConfig)
+	fmt.Println(b)
 }
 
 func main() {
@@ -38,14 +41,24 @@ func main() {
 		return
 	}
 
-	rootCmd.PreRunE = preRunE
-
 	if err := rootCmd.Execute(); err != nil {
 		klog.Error(err)
 	}
 }
 
-func preRunE(cmd *cobra.Command, args []string) error {
+func writeConfig() {
+	if len(*configPath) != 0 {
+		b, err := yaml.Marshal(conf)
+		if err != nil {
+			klog.Errorf("generate config file %s failed with err: %s", *configPath, err)
+		}
+		if err = ioutil.WriteFile(*configPath, b, 0644); err != nil {
+			klog.Errorf("generate config file %s failed with err: %s", *configPath, err)
+		}
+	}
+}
+
+func loadConfig() {
 	if d, err := ioutil.ReadFile(*configPath); err != nil {
 		klog.Warningf("can not load conf, will use default config")
 		conf = defaultConfig
@@ -58,27 +71,40 @@ func preRunE(cmd *cobra.Command, args []string) error {
 	if conf.Wireguard.LocalIp == "" {
 		pubIp := address.GetMyPubIpv4()
 		if pubIp == "" {
-			return fmt.Errorf("emm, need a ip write in client conf")
+			klog.Fatal("need a ip write in client conf")
 		}
 		conf.Wireguard.LocalIp = strings.Trim(pubIp, "\n")
 	}
+}
 
-	// client database
+func initDatabase() {
 	var err error
 	dbCli, err = ent.Open(conf.Database.Type, conf.Database.Dsn)
 	if err != nil {
-		return fmt.Errorf("client database failed with err: %s", err)
+		klog.Fatalf("client database failed with err: %s", err)
 	}
+	if err = dbCli.Schema.Create(context.Background()); err != nil {
+		klog.Fatalf("failed creating schema resources: %v", err)
+	}
+}
 
-	// finish migration database
-	if err := dbCli.Schema.Create(context.Background()); err != nil {
-		return fmt.Errorf("failed creating schema resources: %v", err)
+func initAllocAddrPool() {
+	var cidr *net.IPNet
+	var err error
+
+	if _, cidr, err = net.ParseCIDR(conf.Wireguard.AllocCidr); err == nil {
+		cidrSet, err = cidrset.NewCIDRSet(cidr, 30)
 	}
+}
+
+func preRunE() error {
+	// client database
+	var err error
 
 	// new alloc cidr set
 	var cidr *net.IPNet
 	if _, cidr, err = net.ParseCIDR(conf.Wireguard.AllocCidr); err == nil {
-		cidrSet, err = address.NewCIDRSet(cidr, 30)
+		cidrSet, err = cidrset.NewCIDRSet(cidr, 30)
 	}
 	if err != nil {
 		return fmt.Errorf("new cidr set failed with err %v", err)
@@ -108,6 +134,14 @@ func preRunE(cmd *cobra.Command, args []string) error {
 }
 
 func run(cmd *cobra.Command, args []string) {
+	if *generateConfig {
+		writeConfig()
+	}
+
+	loadConfig()
+	initDatabase()
+	initAllocAddrPool()
+
 	app := DefaultFiber()
 
 	apiV1 := app.Group("/api/v1").Name("api-v1/")
