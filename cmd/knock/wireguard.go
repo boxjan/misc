@@ -14,18 +14,22 @@ import (
 )
 
 func wireguardBackground() {
+	var wgCli *wgctrl.Client
+	var err error
 
-	wgCli, err := wgctrl.New()
-	if err != nil {
-		klog.Warningf("new wireguard client failed with err: %v", err)
-	}
+	for range time.NewTicker(5 * time.Second).C {
+		if wgCli == nil {
+			if wgCli, err = wgctrl.New(); err != nil {
+				klog.Warningf("new wireguard client failed with err: %v", err)
+			}
+		}
 
-	for range time.NewTicker(15 * time.Second).C {
 		devices, err := wgCli.Devices()
 		if err != nil {
 			klog.Warningf("get all device failed with err: %v", err)
 			continue
 		}
+
 		for _, device := range devices {
 			wgc, dbErr := dbCli.WireguardClient.Query().Where(
 				wireguardclient.NetifName(device.Name)).First(context.Background())
@@ -39,30 +43,47 @@ func wireguardBackground() {
 			}
 			for _, peer := range device.Peers {
 				if peer.Endpoint == nil {
-					if wgc.CreatedAt.Sub(time.Now()) > 5*time.Minute {
-						klog.Warningf("will shutdown %s long time no connected, failed with err: %s",
-							device.Name, destroyWireguard(wgc))
+					if time.Now().Sub(wgc.CreatedAt) >= 3*time.Minute {
+						klog.Infof("will shutdown %s, reason: long time no connect")
+						if err := destroyWireguard(wgc); err != nil {
+							klog.Warningf("shutdown %s failed with err: %s",
+								device.Name)
+						}
 					}
 					continue
 				} else {
 					if peer.Endpoint.String() != wgc.PeerAddr {
-						klog.Warning("device: %s peer from %s -> %s", wgc.PeerAddr, peer.Endpoint.String())
-						wgc.PeerAddr = peer.Endpoint.String()
-						wgc.Update()
+						klog.Warningf("device: %s peer from %s -> %s", device.Name, wgc.PeerAddr, peer.Endpoint.String())
+						if _, err := wgc.Update().
+							SetPeerAddr(peer.Endpoint.String()).
+							Save(context.Background()); err != nil {
+							klog.Warningf("save %s failed with err: %s", device.Name, err)
+						}
 					}
 				}
 
 				if wgc.TransmitBytes == uint64(peer.TransmitBytes) || wgc.ReceiveBytes == uint64(peer.ReceiveBytes) {
-					if time.Now().Sub(wgc.UpdatedAt) > time.Minute {
-						wgc.TransmitBytes = uint64(peer.TransmitBytes)
-						wgc.ReceiveBytes = uint64(peer.ReceiveBytes)
-						klog.Warningf("will shutdown %s long time not transit, failed with err: %s",
-							device.Name, destroyWireguard(wgc))
+					if time.Now().Sub(wgc.UpdatedAt) >= time.Minute {
+						klog.Infof("will shutdown %s, reason: long time no transit")
+						if _, err := wgc.Update().
+							SetTransmitBytes(uint64(peer.TransmitBytes)).
+							SetReceiveBytes(uint64(peer.ReceiveBytes)).
+							Save(context.Background()); err != nil {
+							klog.Warningf("save %s failed with err: %s", device.Name, err)
+						}
+						if err := destroyWireguard(wgc); err != nil {
+							klog.Warningf("shutdown %s failed with err: %s",
+								device.Name)
+						}
 					}
+
 				} else {
-					wgc.TransmitBytes = uint64(peer.TransmitBytes)
-					wgc.ReceiveBytes = uint64(peer.ReceiveBytes)
-					wgc.Update()
+					if _, err := wgc.Update().
+						SetTransmitBytes(uint64(peer.TransmitBytes)).
+						SetReceiveBytes(uint64(peer.ReceiveBytes)).
+						Save(context.Background()); err != nil {
+						klog.Warningf("save %s failed with err: %s", device.Name, err)
+					}
 				}
 
 				klog.V(1).Infof("device %s rx: %s, tx: %s", peer.ReceiveBytes, peer.TransmitBytes)
@@ -140,11 +161,16 @@ func destroyWireguard(wgc *ent.WireguardClient) error {
 	}
 	wgc.Expired = true
 	wgc.DestroyedAt = time.Now()
-	wgc.Update()
+	if _, err := wgc.Update().
+		SetExpired(true).
+		SetDestroyedAt(time.Now()).
+		Save(context.Background()); err != nil {
+		klog.Warningf("save %s failed with err: %s", wgc.NetifName, err)
+	}
 	if _, cidr, e := net.ParseCIDR(wgc.AllocCidr); e != nil {
-		klog.Warning()
+		klog.Warningf("release alloc %s with err: %s", wgc.AllocCidr, cidrSet.Release(cidr))
 	} else {
-		klog.Info("release alloc %s with err: %s", wgc.AllocCidr, cidrSet.Release(cidr))
+		klog.V(1).Infof("release alloc %s", wgc.AllocCidr)
 	}
 	return nil
 }

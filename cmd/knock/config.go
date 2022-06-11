@@ -36,7 +36,7 @@ var defaultConfig = Config{
 		AllocCidr:        "10.100.0.0/24",
 		ExcludeAllocCidr: []string{"10.100.0.0/26"},
 		LocalIp:          "",
-		AllowedIps:       []string{"10.100.0.0/16", "10.105.0.0/16"},
+		AllowedIps:       []string{"10.100.0.0/16"},
 	},
 	Http: Http{
 		IdentityHeader: "",

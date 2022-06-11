@@ -10,10 +10,12 @@ import (
 	"github.com/boxjan/misc/pkg/knock/ent/wireguardclient"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/spf13/cobra"
+	"golang.zx2c4.com/wireguard/wgctrl"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"k8s.io/klog/v2"
 	"net"
+	"os"
 	"runtime/debug"
 	"strings"
 )
@@ -97,20 +99,53 @@ func initDatabase() {
 
 func initAllocAddrPool() {
 	var cidr *net.IPNet
+	var wgCli *wgctrl.Client
 	var err error
 
 	if _, cidr, err = net.ParseCIDR(conf.Wireguard.AllocCidr); err == nil {
 		cidrSet, err = cidrset.NewCIDRSet(cidr, 30)
 	}
-	// mark in use alloc cidr in cidr set
-	wc, err := dbCli.WireguardClient.Query().Where(wireguardclient.Expired(false)).All(context.Background())
-	if err != nil {
-		klog.Fatalf("get alloced cidr list failed with err: %s", err)
+
+	for _, eac := range conf.Wireguard.ExcludeAllocCidr {
+		if _, i, err := net.ParseCIDR(eac); err == nil {
+			if err := cidrSet.Occupy(i); err != nil {
+				klog.Warningf("occupy cidr set meet err: %v", err)
+			}
+		} else {
+			klog.Fatalf("parse ExcludeAllocCidr: %s failed with err: %v", eac, err)
+		}
 	}
-	for _, w := range wc {
-		_, c, err := net.ParseCIDR(w.AllocCidr)
-		if err == nil {
-			_ = cidrSet.Occupy(c)
+
+	// mark in use alloc cidr in cidr set
+	wgcs, err := dbCli.WireguardClient.Query().Where(wireguardclient.Expired(false)).All(context.Background())
+	if err != nil {
+		klog.Fatalf("get active wireguard link from database failed with err: %s", err)
+	}
+
+	wgCli, err = wgctrl.New()
+	if err != nil {
+		klog.Fatalf("init wireguard ctrl failed with err: %v", err)
+	}
+
+	for _, wgc := range wgcs {
+		if _, err := wgCli.Device(wgc.NetifName); err != nil {
+			if err == os.ErrNotExist {
+				klog.Infof("device %s not exists any more, will update database", wgc.NetifName)
+				if _, err := wgc.Update().SetExpired(true).Save(context.Background()); err != nil {
+					klog.Warningf("save %s failed with err: %s", wgc.NetifName, err)
+				}
+			} else {
+				klog.Warningf("device %s exists in database but sync info failed with err: %s", wgc.NetifName, err)
+			}
+			continue
+		}
+
+		if _, c, err := net.ParseCIDR(wgc.AllocCidr); err == nil {
+			if err := cidrSet.Occupy(c); err != nil {
+				klog.Warningf("occupy cidr set meet err: %v", err)
+			}
+		} else {
+			klog.Fatalf("parse exists device %s, cidr: %s failed with err: %v", c, err)
 		}
 	}
 }
