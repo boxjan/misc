@@ -5,6 +5,7 @@ import (
 	"github.com/valyala/bytebufferpool"
 	"golang.zx2c4.com/wireguard/wgctrl/wgtypes"
 	"net"
+	"time"
 )
 
 var (
@@ -48,7 +49,7 @@ func (wg WgConf) Parse() []byte {
 		}
 
 		if peer.PersistentKeepaliveInterval != nil {
-			fmt.Fprintf(w, "PersistentKeepalive = %d\n", peer.PersistentKeepaliveInterval)
+			fmt.Fprintf(w, "PersistentKeepalive = %d\n", int(*peer.PersistentKeepaliveInterval/time.Second))
 		}
 
 		for _, allowedIp := range peer.AllowedIPs {
@@ -137,7 +138,7 @@ func (wq WgQuickConf) Parse() []byte {
 		}
 
 		if peer.PersistentKeepaliveInterval != nil {
-			fmt.Fprintf(w, "PersistentKeepalive = %d\n", peer.PersistentKeepaliveInterval)
+			fmt.Fprintf(w, "PersistentKeepalive = %d\n", int(*peer.PersistentKeepaliveInterval/time.Second))
 		}
 
 		for _, allowedIp := range peer.AllowedIPs {

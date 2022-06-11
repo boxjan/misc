@@ -30,7 +30,7 @@ var defaultConfig = Config{
 	Addr: "[::]:8000",
 	Database: Database{
 		Type: "sqlite3",
-		Dsn:  "file:ent?mode=memory&_fk=1",
+		Dsn:  "file:ent?_fk=1",
 	},
 	Wireguard: Wireguard{
 		AllocCidr:        "10.100.0.0/24",

@@ -42,7 +42,7 @@ func NewWgQuickConfPair(serverIp, clientIp *net.IPNet, listen *net.UDPAddr, keep
 	server.Peers = append(server.Peers, wgtypes.PeerConfig{
 		PublicKey:                   client.PrivateKey.PublicKey(),
 		PersistentKeepaliveInterval: &persistentKeepaliveInterval,
-		AllowedIPs:                  nil,
+		AllowedIPs:                  []net.IPNet{*clientIp},
 	})
 
 	client.Peers = append(client.Peers, wgtypes.PeerConfig{

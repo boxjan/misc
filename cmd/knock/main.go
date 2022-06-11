@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"github.com/boxjan/misc/commom/address"
 	"github.com/boxjan/misc/commom/cidrset"
 	"github.com/boxjan/misc/commom/cmd"
@@ -30,16 +29,16 @@ var (
 )
 
 func init() {
-	b, _ := yaml.Marshal(defaultConfig)
-	fmt.Println(b)
 }
 
 func main() {
-	if e := recover(); e != nil {
-		trace := debug.Stack()
-		klog.Errorf("catch panic: %v\nstack: %s", e, trace)
-		return
-	}
+	defer func() {
+		if e := recover(); e != nil {
+			trace := debug.Stack()
+			klog.Errorf("catch panic: %v\nstack: %s", e, trace)
+			return
+		}
+	}()
 
 	if err := rootCmd.Execute(); err != nil {
 		klog.Error(err)
@@ -75,6 +74,14 @@ func loadConfig() {
 		}
 		conf.Wireguard.LocalIp = strings.Trim(pubIp, "\n")
 	}
+
+	for _, i := range conf.Wireguard.AllowedIps {
+		_, c, err := net.ParseCIDR(i)
+		if err != nil {
+			klog.Fatalf("parse cidr: %s failed with err: %s", i, err)
+		}
+		conf.Wireguard.allowedIps = append(conf.Wireguard.allowedIps, *c)
+	}
 }
 
 func initDatabase() {
@@ -95,25 +102,10 @@ func initAllocAddrPool() {
 	if _, cidr, err = net.ParseCIDR(conf.Wireguard.AllocCidr); err == nil {
 		cidrSet, err = cidrset.NewCIDRSet(cidr, 30)
 	}
-}
-
-func preRunE() error {
-	// client database
-	var err error
-
-	// new alloc cidr set
-	var cidr *net.IPNet
-	if _, cidr, err = net.ParseCIDR(conf.Wireguard.AllocCidr); err == nil {
-		cidrSet, err = cidrset.NewCIDRSet(cidr, 30)
-	}
-	if err != nil {
-		return fmt.Errorf("new cidr set failed with err %v", err)
-	}
-
 	// mark in use alloc cidr in cidr set
 	wc, err := dbCli.WireguardClient.Query().Where(wireguardclient.Expired(false)).All(context.Background())
 	if err != nil {
-		return fmt.Errorf("get alloced cidr list failed with err: %s", err)
+		klog.Fatalf("get alloced cidr list failed with err: %s", err)
 	}
 	for _, w := range wc {
 		_, c, err := net.ParseCIDR(w.AllocCidr)
@@ -121,16 +113,6 @@ func preRunE() error {
 			_ = cidrSet.Occupy(c)
 		}
 	}
-
-	for _, i := range conf.Wireguard.AllowedIps {
-		_, c, err := net.ParseCIDR(i)
-		if err != nil {
-			return fmt.Errorf("parse all")
-		}
-		conf.Wireguard.allowedIps = append(conf.Wireguard.allowedIps, *c)
-	}
-
-	return nil
 }
 
 func run(cmd *cobra.Command, args []string) {
