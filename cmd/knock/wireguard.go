@@ -62,8 +62,8 @@ func wireguardBackground() {
 					}
 				}
 
-				if time.Now().Sub(peer.LastHandshakeTime) > 2*time.Minute {
-					klog.Infof("will shutdown %s, reason: long time no handshake")
+				if time.Now().Sub(peer.LastHandshakeTime) >= 145*time.Second {
+					klog.Infof("will shutdown %s, reason: long time no handshake", device)
 					if _, err := wgc.Update().
 						SetTransmitBytes(uint64(peer.TransmitBytes)).
 						SetReceiveBytes(uint64(peer.ReceiveBytes)).
@@ -75,7 +75,7 @@ func wireguardBackground() {
 							device.Name, err)
 					}
 				} else if (wgc.TransmitBytes == uint64(peer.TransmitBytes) || wgc.ReceiveBytes == uint64(peer.ReceiveBytes)) &&
-					time.Now().Sub(wgc.UpdatedAt) >= 2*time.Minute {
+					time.Now().Sub(wgc.UpdatedAt) >= 145*time.Second {
 					klog.Infof("will shutdown %s, reason: long time nothing transit")
 					if _, err := wgc.Update().
 						SetTransmitBytes(uint64(peer.TransmitBytes)).
