@@ -5,16 +5,23 @@ go 1.17
 require (
 	entgo.io/ent v0.10.1
 	github.com/gofiber/fiber/v2 v2.26.0
+	github.com/huin/goupnp v1.2.0
+	github.com/kardianos/service v1.2.2
 	github.com/labstack/echo/v4 v4.7.2
 	github.com/mattn/go-sqlite3 v1.14.10
 	github.com/spf13/cobra v1.3.0
 	github.com/valyala/bytebufferpool v1.0.0
 	github.com/valyala/fasthttp v1.32.0
 	github.com/valyala/fasttemplate v1.2.1
+	go.uber.org/zap v1.17.0
+	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 	golang.zx2c4.com/wireguard/wgctrl v0.0.0-20220504211119-3d4a969bb56b
 	gopkg.in/yaml.v2 v2.4.0
+	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 	k8s.io/klog/v2 v2.40.1
 )
+
+replace github.com/huin/goupnp v1.2.0 => github.com/boxjan/goupnp v0.0.0-20230722062512-71d7de2e97a9
 
 require (
 	ariga.io/atlas v0.3.7-0.20220303204946-787354f533c3 // indirect
@@ -39,10 +46,11 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/valyala/tcplisten v1.0.0 // indirect
 	github.com/zclconf/go-cty v1.8.0 // indirect
+	go.uber.org/atomic v1.7.0 // indirect
+	go.uber.org/multierr v1.6.0 // indirect
 	golang.org/x/crypto v0.0.0-20220411220226-7b82a4e95df4 // indirect
 	golang.org/x/mod v0.5.1 // indirect
 	golang.org/x/net v0.0.0-20220418201149-a630d4f3e7a2 // indirect
-	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
 	golang.org/x/sys v0.0.0-20220412211240-33da011f77ad // indirect
 	golang.org/x/text v0.3.7 // indirect
 	golang.zx2c4.com/wireguard v0.0.0-20220407013110-ef5c587f782d // indirect
